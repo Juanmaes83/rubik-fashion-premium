@@ -1,0 +1,7 @@
+Video States Website — Amir Mušić.
+Project-owned media licensed under CC BY 4.0:
+https://creativecommons.org/licenses/by/4.0/
+Original source: https://github.com/amirmushichge/video-states-website
+Supplied repository: https://github.com/Juanmaes83/video-states-website
+Changes: new React/TypeScript interactive website implementation. Original media copied without modification.
+The LTX logo and third-party trademarks are excluded from the media license. This implementation does not imply endorsement.

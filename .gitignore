@@ -1,0 +1,12 @@
+node_modules/
+.playwright-cli/
+*.log
+!packages/fashion-hero/package-lock.json
+package-lock.json
+dbg-*.mjs
+.vercel/
+
+.vercel
+!packages/fashion-hero/package-lock.json
+
+.vercel

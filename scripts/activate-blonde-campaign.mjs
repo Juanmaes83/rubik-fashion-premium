@@ -1,0 +1,12 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const dir='assets/campaigns/blonde-v1';
+const required=['state-base.png','state-colorway.png','state-environment.png','keyframe-light-shift-v2.png','keyframe-full-look-v3.png',...Array.from({length:4},(_,i)=>[`video-${i+1}.mp4`,`video-${i+1}-reverse.mp4`]).flat()];
+for(const f of required)if(!fs.existsSync(path.join(root,dir,f)))throw Error(`Missing campaign asset: ${f}`);
+const profile=path.join(root,'fashion-profile.js');
+let source=fs.readFileSync(profile,'utf8');
+source=source.replaceAll('retake/',dir+'/').replace("'Acid day'","'Lavender day'").replace("guard:n===2&&direction==='reverse'?.18:.08","guard:.04");
+fs.writeFileSync(profile,source);
+console.log('New campaign is now the default. Existing custom media are retained by the Studio migration.');

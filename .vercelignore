@@ -1,0 +1,10 @@
+.git
+.playwright-cli
+node_modules
+packages
+tests
+output
+scripts
+*.log
+assets/fashion/hero
+assets/half-orbit

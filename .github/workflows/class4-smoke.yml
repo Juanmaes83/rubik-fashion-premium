@@ -1,0 +1,31 @@
+name: Class 04 smoke checks
+
+on:
+  push:
+    branches: [main, fix/class-04-restore-class3-engine]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JavaScript syntax
+        run: |
+          node --check class4-store.js
+          node --check class4-config.js
+          node --check app-v4.js
+          node --check class4-cinematic-restore.js
+          node --check class4-runtime-guard.js
+      - name: Static DOM contract
+        run: node scripts/class4-static-check.mjs
+      - name: JSON preset validation
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('presets/NAMI-CLASS04.json','utf8')); console.log('NAMI preset: PASS')"

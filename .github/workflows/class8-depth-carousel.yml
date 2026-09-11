@@ -1,0 +1,188 @@
+name: Motion Engine — Depth Carousel + Anchor Scenes + Orbital Food + Pizza Slice Orbit + Premium + Scroll Traveler + Motion Library
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ['feat/depth-carousel-lab','feat/anchor-swap-scenes-lab','feat/scroll-traveler-red-prawn','feat/motion-studio-integration']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  depth-carousel:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax checks
+        run: |
+          node --check class8-depth-carousel.js
+          node --check class9-anchor-scenes.js
+          node --check class10-orbital-food.js
+          node --check class11-pizza-slice-orbit.js
+          node --check class12-pizza-premium.js
+          node --check class14-scroll-traveler.js
+          node --check scripts/check-scroll-traveler.mjs
+          node --check scripts/build-traveler-asset.mjs
+          node --check tests/class14-scroll-traveler-e2e.mjs
+          node --check tests/capture-scroll-traveler.mjs
+          node --check tests/record-scroll-traveler-video.mjs
+          node --check class19-motion-library.js
+          node --check scripts/check-motion-library.mjs
+          node --check tests/class19-motion-library-e2e.mjs
+          node --check scripts/check-pizza-premium.mjs
+          node --check tests/class12-pizza-premium-e2e.mjs
+          node --check class6-detail-bridge.js
+          node --check scripts/ingest-pizza-slices.mjs
+          node --check tests/class11-pizza-slice-orbit-e2e.mjs
+          node --check app-v4.js
+          node --check class6-product.js
+          node --check class4-config.js
+          node --check class4-runtime-guard.js
+          node --check tests/class8-depth-carousel-e2e.mjs
+          node --check tests/class9-anchor-scenes-e2e.mjs
+          node --check tests/class10-orbital-food-slider-e2e.mjs
+          node --check tests/static-server.mjs
+      - name: Additive contract — index.html must stay untouched
+        run: |
+          grep -q 'class4-runtime-guard.js' index.html
+          ! grep -q 'class8-depth-carousel.js' index.html
+          ! grep -q 'class9-anchor-scenes.js' index.html
+          ! grep -q 'class10-orbital-food.js' index.html
+          ! grep -q 'class11-pizza-slice-orbit.js' index.html
+          ! grep -q 'class12-pizza-premium.js' index.html
+          ! grep -q 'class14-scroll-traveler.js' index.html
+          ! grep -q 'styles-v14.css' index.html
+          ! grep -q 'class19-motion-library.js' index.html
+          ! grep -q 'styles-v19.css' index.html
+          grep -q "s.src='class8-depth-carousel.js'" class4-runtime-guard.js
+          grep -q "s.src='class9-anchor-scenes.js'" class4-runtime-guard.js
+          grep -q "s.src='class10-orbital-food.js'" class4-runtime-guard.js
+          grep -q "s.src='class11-pizza-slice-orbit.js'" class4-runtime-guard.js
+          grep -q "s.src='class12-pizza-premium.js'" class4-runtime-guard.js
+          grep -q "s.src='class14-scroll-traveler.js'" class4-runtime-guard.js
+          grep -q "s.src='class19-motion-library.js'" class4-runtime-guard.js
+      - name: Install browser test runtime
+        run: |
+          test -f package.json || npm init -y >/dev/null 2>&1
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Depth Carousel E2E (desktop + mobile + reduced motion)
+        run: node tests/class8-depth-carousel-e2e.mjs
+      - name: Regression — Class 05 and Class 06 contracts
+        run: |
+          node tests/class7-editorial-flow-static.mjs
+          node -e "import('./tests/static-server.mjs').then(m=>m.startServer(4173))" &
+          sleep 3
+          node tests/class5-complete-e2e.mjs
+          node tests/class6-product-e2e.mjs
+      - name: Asset contract
+        run: |
+          node -e "global.window={};require('./class4-config.js');const fs=require('fs');const d=window.RestaurantDefaults.dishes;const free=d.filter(x=>x.depthCarousel&&x.depthCarousel.asset);if(free.length<3)throw new Error('fewer than 3 free-object assets: '+free.length);const decor=d.filter(x=>x.depthCarousel&&[].concat(x.depthCarousel.foregroundDecor||[]).length&&x.depthCarousel.backgroundDecor);if(decor.length<free.length)throw new Error('dishes without decor: '+(free.length-decor.length));const files=d.flatMap(x=>[x.depthCarousel.asset].concat(x.depthCarousel.foregroundDecor||[],x.depthCarousel.backgroundDecor||[])).filter(Boolean);for(const f of files)if(!fs.existsSync(f))throw new Error('missing asset '+f);console.log('free objects '+free.length+', dishes with decor '+decor.length+', files '+files.length)"
+      - name: Project 02 Anchor Scenes E2E
+        run: node tests/class9-anchor-scenes-e2e.mjs
+      - name: Anchor scene provenance — the demo must be the real master set
+        run: |
+          node -e "const m=require('./assets/anchor-scenes/scenes-manifest.json');const fs=require('fs');
+            if(m.kind!=='real'||m.source!=='MANO+OBJETO/')throw new Error('the manifest is not the real master set: kind='+m.kind);
+            if(m.scenes.length<4)throw new Error('only '+m.scenes.length+' real scenes');
+            for(const s of m.scenes){
+              if(!/^MANO\+OBJETO\//.test(s.sourceOriginal))throw new Error('scene not traced to MANO+OBJETO/: '+s.runtimeAsset);
+              if(!fs.existsSync(s.sourceOriginal))throw new Error('missing source: '+s.sourceOriginal);
+              if(!fs.existsSync(s.runtimeAsset))throw new Error('missing runtime asset: '+s.runtimeAsset);
+              if(!s.registration)throw new Error('scene has no registration data: '+s.runtimeAsset);
+            }
+            const declared=new Set(m.scenes.map(s=>s.runtimeAsset.split('/').pop()));
+            const onDisk=fs.readdirSync('assets/anchor-scenes/runtime');
+            const stray=onDisk.filter(f=>!declared.has(f));
+            if(stray.length)throw new Error('undeclared assets in the runtime folder: '+stray.join(', '));
+            console.log('provenance: '+m.scenes.length+' real scenes from '+m.source+', '+m.excluded.length+' excluded')"
+
+      - name: Anchor scene consistency audit
+        run: |
+          node scripts/audit-anchor-scenes.mjs
+          node -e "const a=require('./assets/anchor-scenes/audit/scenes-audit.json');const v=a.verdict,o=a.object;if(!v.sameCanvas||!v.sameOrientation)throw new Error('scenes are not one take');if(!v.anchorOk||!v.anchorRatioOk)throw new Error('anchor region moved between scenes: '+v.anchorWorst);if(!v.lumaOk)throw new Error('lighting spread too wide: '+v.lumaSpread);if(!o.scaleOk||!o.centreOk)throw new Error('object geometry jumps between scenes');console.log('scene consistency: anchor diff '+v.anchorWorst+', luma spread '+v.lumaSpread)"
+      - name: Project 03 Orbital Food Slider E2E
+        run: node tests/class10-orbital-food-slider-e2e.mjs
+
+      - name: Orbital reuse contract — one engine, one index, one progress
+        run: node scripts/check-orbit-reuse.mjs
+
+      - name: Project 07 Pizza Slice Orbit E2E
+        run: node tests/class11-pizza-slice-orbit-e2e.mjs
+
+      - name: Pizza slice contract — immutable masters, one state, registered set
+        run: node scripts/check-pizza-slices.mjs
+
+      - name: Project 07 Premium product-discovery E2E
+        run: node tests/class12-pizza-premium-e2e.mjs
+
+      - name: Premium protection contract — approved motor untouched
+        run: node scripts/check-pizza-premium.mjs
+
+      - name: Project 09 Scroll Traveler E2E (desktop + mobile + studio + reduced motion)
+        run: node tests/class14-scroll-traveler-e2e.mjs
+
+      - name: Traveler contract — one progress, data-driven route, additive only
+        run: node scripts/check-scroll-traveler.mjs
+
+      - name: Traveler object provenance — the runtime cut traces to an approved master
+        run: |
+          node -e "const m=require('./assets/scroll-traveler/traveler-manifest.json');const fs=require('fs');
+            if(!m.travelers.length)throw new Error('no traveler objects declared');
+            for(const t of m.travelers){
+              if(!fs.existsSync(t.source))throw new Error('missing source master: '+t.source);
+              if(!fs.existsSync(t.runtimeAsset))throw new Error('missing runtime object: '+t.runtimeAsset);
+              if(!/^assets\/depth-carousel\//.test(t.source))throw new Error('source is not an approved master: '+t.source);
+              if(t.bytes>=t.sourceBytes)throw new Error('the runtime cut is not lighter than its master: '+t.id);
+            }
+            const declared=new Set(m.travelers.map(t=>t.runtimeAsset.split('/').pop()));
+            const stray=fs.readdirSync('assets/scroll-traveler/runtime').filter(f=>!declared.has(f));
+            if(stray.length)throw new Error('undeclared objects in the runtime folder: '+stray.join(', '));
+            console.log('traveler objects: '+m.travelers.map(t=>t.id+' from '+t.source).join(', '))"
+
+      - name: Class 19 Motion Library E2E (desktop + mobile)
+        run: node tests/class19-motion-library-e2e.mjs
+
+      - name: Motion library contract — eleven real engines, no second selection
+        run: node scripts/check-motion-library.mjs
+
+      - name: Isolated engine contracts brought in by main
+        run: |
+          node tests/class15-cinematic-product-rail-contract.mjs
+          node tests/class17-social-reputation-contract.mjs
+          node tests/class18-whatsapp-contact-contract.mjs
+          node tests/class13-dish-stage-contract.mjs
+          node tests/project06-circular-dish-rotator-contract.mjs
+
+      - name: Capture Scroll Traveler journey evidence
+        run: node tests/capture-scroll-traveler.mjs
+
+      - name: Record motion evidence
+        run: |
+          node tests/record-depth-carousel-video.mjs
+          node tests/record-anchor-scenes-video.mjs
+      - name: Record Orbital Food motion evidence
+        run: node tests/record-orbital-food-video.mjs
+
+      - name: Record Pizza Slice Orbit motion evidence
+        run: node tests/record-pizza-slice-orbit-video.mjs
+
+      - name: Record Pizza Premium motion evidence
+        run: node tests/record-pizza-premium-video.mjs
+
+      - name: Record Scroll Traveler motion evidence
+        run: node tests/record-scroll-traveler-video.mjs
+
+      - name: Upload visual evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: depth-carousel-v2-evidence
+          path: |
+            tests/screenshots/
+            tests/video/
