@@ -71,6 +71,8 @@
       const draft=structuredClone(get('fashion.draft'));
       const chooseAvailable=async(item,kind)=>{const primary=typeof item==='string'?item:item?.ref;const fallback=typeof item==='object'?item?.fallback:'';try{await probe(await resolve(primary),kind);return primary;}catch(error){if(!fallback)throw error;await probe(await resolve(fallback),kind);return fallback;}};
       draft.base=await chooseAvailable({ref:draft.base,fallback:'assets/campaigns/blonde-v1/state-base.png'},'image');
+      for(const [key,value] of Object.entries(draft.references||{})){draft.references[key]=await chooseAvailable({ref:value?.ref||value,fallback:draft.referenceFallbacks?.[key]||`assets/campaigns/blonde-v1/${key==='light'?'keyframe-light-shift-v2.png':key==='fullLook'?'keyframe-full-look-v3.png':key==='colorway'?'state-colorway.png':'state-environment.png'}`},'image');}
+      delete draft.referenceFallbacks;
       for(const media of Object.values(draft.media||{})){media.url=await chooseAvailable({ref:media.url,fallback:media.fallback},media.type||'image');delete media.fallback;}
       for(const dish of draft.dishes||[]){dish.image=await chooseAvailable({ref:dish.image,fallback:dish.fallback},'image');delete dish.fallback;}
       for(const block of draft.editorialBlocks||[]){block.ref=await chooseAvailable({ref:block.ref,fallback:block.fallback},block.kind==='video'?'video':'image');if(block.poster)block.poster=await chooseAvailable({ref:block.poster,fallback:block.posterFallback},'image');delete block.fallback;delete block.posterFallback;}
