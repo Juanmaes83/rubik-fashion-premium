@@ -1,5 +1,9 @@
 # RUBIK SOTA — Fashion Premium
 
+**Web pública:** https://rubik-fashion-premium.vercel.app/ · **Modelo 03:** https://rubik-fashion-premium.vercel.app/modelo-03.html
+
+[Prompts de dirección V2: vestuario, actuación y continuidad](docs/PROMPTS-MODA-DIRECCION-V2.md).
+
 Web de moda interactiva con campañas audiovisuales, biblioteca de creatividades y Studio personalizable. La campaña rubia está activa por defecto; la original sigue en Biblioteca. El tercer modelo masculino dispone de imagen base, pendiente de vídeos.
 
 Entrada: `fashion.html`. Revisión del modelo 03: `modelo-03.html`. Galería de vídeos: `campaign-review.html`. En Vercel, la raíz sirve la web de moda.
