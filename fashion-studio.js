@@ -69,15 +69,24 @@
     button.disabled=true;message('Validando la imagen base y los ocho vídeos…');
     try{
       const draft=structuredClone(get('fashion.draft'));
+      const chooseAvailable=async(item,kind)=>{const primary=typeof item==='string'?item:item?.ref;const fallback=typeof item==='object'?item?.fallback:'';try{await probe(await resolve(primary),kind);return primary;}catch(error){if(!fallback)throw error;await probe(await resolve(fallback),kind);return fallback;}};
+      draft.base=await chooseAvailable({ref:draft.base,fallback:'assets/campaigns/blonde-v1/state-base.png'},'image');
+      for(const media of Object.values(draft.media||{})){media.url=await chooseAvailable({ref:media.url,fallback:media.fallback},media.type||'image');delete media.fallback;}
+      for(const dish of draft.dishes||[]){dish.image=await chooseAvailable({ref:dish.image,fallback:dish.fallback},'image');delete dish.fallback;}
+      for(const block of draft.editorialBlocks||[]){block.ref=await chooseAvailable({ref:block.ref,fallback:block.fallback},block.kind==='video'?'video':'image');if(block.poster)block.poster=await chooseAvailable({ref:block.poster,fallback:block.posterFallback},'image');delete block.fallback;delete block.posterFallback;}
       const base=await probe(await resolve(draft.base),'image');
       if(Math.abs(base.width/base.height-16/9)>.025)throw new Error('La imagen base debe tener proporción 16:9.');
       for(const [id,c] of Object.entries(draft.clips)){
+        c.ref=await chooseAvailable(c,'video');delete c.fallback;
         const info=await probe(await resolve(c.ref),'video');
         if(Math.abs(info.width/info.height-base.width/base.height)>.025)throw new Error(`${id}: el encuadre debe ser 16:9, como la base.`);
         if(!Number.isFinite(info.duration)||info.duration<.4||info.duration>30)throw new Error(`${id}: usa un vídeo de 0,4 a 30 segundos.`);
         if(!Number.isFinite(Number(c.guard))||c.guard<0||c.guard>=info.duration-.1)throw new Error(`${id}: margen final incompatible con su duración.`);
       }
       set('fashion.active',draft);
+      if(draft.media)set('media',draft.media);
+      if(draft.dishes)set('dishes',draft.dishes);
+      if(draft.editorialBlocks)set('fashion.editorialBlocks',draft.editorialBlocks);
       message('Pack aplicado. Comprueba visualmente las cuatro idas y vueltas: la validación técnica no comprueba identidad, color ni continuidad.');
     }catch(err){message(`No se ha cambiado el pack activo. ${err.message}`,true);}finally{button.disabled=false;}
   }
